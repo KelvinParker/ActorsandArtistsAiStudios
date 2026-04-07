@@ -1,0 +1,1 @@
+-- Optional local seed after `supabase db reset`. Production data uses migrations + Dashboard.

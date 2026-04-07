@@ -1,0 +1,22 @@
+# Project: Actors and Artists AI Studios
+
+## Overview
+A high-end AI casting platform and character marketplace. The flagship project is "Dirty South," a 2000s-era urban drama set in Memphis.
+
+## Tech Stack
+- Framework: Next.js 15+ (App Router)
+- Auth: Clerk
+- Database: Supabase (PostgreSQL)
+- AI Image: Fal.ai (Flux)
+- Styling: Tailwind CSS (Cinematic Dark Mode)
+
+## Design Language
+- Theme: Dark, gritty, cinematic. Use deep grays, blacks, and metallic orange accents (referencing the '75 Cutlass).
+- Typography: Professional, bold, clean.
+- Components: Large vertical 9:16 aspect ratios for actor headshots.
+
+## Key Rules
+- Always prioritize character consistency (Face DNA).
+- Use the 'actors' table in Supabase as the primary data source.
+- Ensure all API routes for image generation include error handling and loading states.
+- When creating components, refer to the "Marcus King" character profile as the primary example.

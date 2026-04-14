@@ -17,9 +17,9 @@ export default function AddActorPage() {
         Add actor
       </h1>
       <p className="mb-8 text-sm text-white/50">
-        Create a new character row in Supabase. First image URL is the cover;
-        up to three more go in <code className="text-white/70">headshot_urls</code>
-        .
+        Create a new character row in Supabase using manual entry or the automated
+        A-D pipeline (Gemini expansion, Flux master face, consistency loop, and
+        Supabase asset mirror/save).
       </p>
       <AddActorForm />
     </div>

@@ -158,10 +158,10 @@ export function ActorGalleryTile({
       </div>
 
       {showAdminControls ? (
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex min-w-0 flex-nowrap justify-center gap-1">
           <Link
             href={`/admin/cast?edit=${actor.id}`}
-            className="rounded-sm border border-metallic-orange/50 bg-metallic-orange/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-metallic-orange transition hover:bg-metallic-orange/25"
+            className="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-sm border border-metallic-orange/50 bg-metallic-orange/15 px-1 text-center text-[6px] font-semibold uppercase leading-none tracking-normal text-metallic-orange transition hover:bg-metallic-orange/25 sm:px-1.5 sm:text-[9px] sm:tracking-wide md:text-[10px]"
           >
             Edit
           </Link>
@@ -169,16 +169,16 @@ export function ActorGalleryTile({
             type="button"
             onClick={handleDownloadPack}
             disabled={!primary || downloadPackPending}
-            className="rounded-sm border border-metallic-orange/45 bg-black/45 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-metallic-orange transition hover:bg-black/60 disabled:opacity-40"
+            className="inline-flex h-8 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-sm border border-metallic-orange/45 bg-black/45 px-1.5 text-center text-[6px] font-semibold uppercase leading-none tracking-normal text-metallic-orange transition hover:bg-black/60 disabled:opacity-40 sm:text-[9px] sm:tracking-wide md:text-[10px]"
             title={primary ? undefined : "Headshot not available to package yet"}
           >
-            {downloadPackPending ? "Preparing…" : "Download pack"}
+            {downloadPackPending ? "Preparing…" : "Download"}
           </button>
           <button
             type="button"
             disabled={deletePending}
             onClick={handleAdminDelete}
-            className="rounded-sm border border-red-500/45 bg-red-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-red-200/95 transition hover:bg-red-500/20 disabled:opacity-40"
+            className="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-sm border border-red-500/45 bg-red-500/10 px-1 text-center text-[6px] font-semibold uppercase tracking-[0.06em] text-red-200/95 transition hover:bg-red-500/20 disabled:opacity-40 sm:px-1.5 sm:text-[9px] sm:tracking-wide md:text-[10px]"
           >
             {deletePending ? "…" : "Delete"}
           </button>

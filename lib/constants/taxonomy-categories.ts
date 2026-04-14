@@ -18,7 +18,7 @@ export const TAXONOMY_CATEGORY_KEYS = [
 export type TaxonomyCategory = (typeof TAXONOMY_CATEGORY_KEYS)[number];
 
 export const TAXONOMY_CATEGORY_LABELS: Record<TaxonomyCategory, string> = {
-  race_ethnicity: "Race / ethnicity",
+  race_ethnicity: "Ethnicity",
   age_range: "Age (casting band)",
   height: "Height",
   weight: "Weight / build",

@@ -15,6 +15,13 @@ A high-end AI casting platform and character marketplace. The flagship project i
 - Typography: Professional, bold, clean.
 - Components: Large vertical 9:16 aspect ratios for actor headshots.
 
+### Gallery and profile headshots (uploads)
+- **Minimum deliverable (4 images):** one **9:16** master in `headshot_urls[0]` (gallery + hero), **two 16:9** stills in `headshot_urls[1]` and `[2]`, and one **16:9 horizontal** `turnaround_url`. Ask cast/art for this pack by default.
+- **Home gallery tiles** (`ActorGalleryTile`): `headshot_urls[0]` fills the **9:16** tile with `object-cover` + `object-top`.
+- **Profile gallery** (`ActorHeadshotGalleryGrid`): **two** URLs → side-by-side **9:16** cells, **`object-contain`**. **Three** URLs → one row: **[0] 9:16 cover**, **[1][2] 16:9 contain**, then turnaround row. **Four+** URLs → legacy 2-column cropped tiles + lightbox.
+- Do not use `object-contain` on the hero 9:16 slot for “see full image”; use the **lightbox** (click tile).
+- **Turnaround** on profile: **16:9** frame, `object-contain` (vertical legacy sheets letterbox); click opens lightbox. Escape or backdrop closes it.
+
 ## Key Rules
 - Always prioritize character consistency (Face DNA).
 - Use the 'actors' table in Supabase as the primary data source.

@@ -69,7 +69,7 @@ async function attachProfileCastingFieldsIfAvailable(
   const ids = actors.map((a) => a.id);
 
   const profileSelectAttempts: string[] = [
-    "id,race,sex,height,weight,age_range,age_range_min,age_range_max",
+    "id,ethnicity,sex,height,weight,age_range,age_range_min,age_range_max",
     "id,sex,height,weight,age_range,age_range_min,age_range_max",
     "id,sex,height,weight,age_range",
     "id,sex,height,weight",
@@ -114,6 +114,165 @@ async function attachProfileCastingFieldsIfAvailable(
   return actors;
 }
 
+async function attachPhysicalDescriptionIfAvailable(
+  supabase: SupabaseClient,
+  actors: ActorRow[],
+): Promise<ActorRow[]> {
+  if (actors.length === 0) return actors;
+  const ids = actors.map((a) => a.id);
+
+  const { data, error } = await supabase
+    .from("actors")
+    .select("id,physical_description")
+    .in("id", ids);
+
+  if (error) {
+    if (isMissingColumnError(error.message)) {
+      return actors;
+    }
+    return actors;
+  }
+
+  const map = new Map<string, string | null>();
+  for (const row of data ?? []) {
+    const r = row as { id: string; physical_description: unknown };
+    const v = r.physical_description;
+    map.set(r.id, typeof v === "string" ? v : null);
+  }
+
+  return actors.map((a) => ({
+    ...a,
+    physical_description: map.get(a.id) ?? a.physical_description ?? null,
+  }));
+}
+
+async function attachDnaLoraFieldsIfAvailable(
+  supabase: SupabaseClient,
+  actors: ActorRow[],
+): Promise<ActorRow[]> {
+  if (actors.length === 0) return actors;
+  const ids = actors.map((a) => a.id);
+
+  const { data, error } = await supabase
+    .from("actors")
+    .select(
+      "id,dna_lora_url,dna_lora_trigger,dna_lora_fal_request_id,dna_lora_status,dna_lora_error,dna_lora_completed_at",
+    )
+    .in("id", ids);
+
+  if (error) {
+    if (isMissingColumnError(error.message)) {
+      return actors;
+    }
+    return actors;
+  }
+
+  type LoraCols = {
+    dna_lora_url: string | null;
+    dna_lora_trigger: string | null;
+    dna_lora_fal_request_id: string | null;
+    dna_lora_status: string | null;
+    dna_lora_error: string | null;
+    dna_lora_completed_at: string | null;
+  };
+  const map = new Map<string, LoraCols>();
+  for (const row of data ?? []) {
+    const r = row as { id: string } & Record<string, unknown>;
+    map.set(r.id, {
+      dna_lora_url: typeof r.dna_lora_url === "string" ? r.dna_lora_url : null,
+      dna_lora_trigger: typeof r.dna_lora_trigger === "string" ? r.dna_lora_trigger : null,
+      dna_lora_fal_request_id:
+        typeof r.dna_lora_fal_request_id === "string" ? r.dna_lora_fal_request_id : null,
+      dna_lora_status: typeof r.dna_lora_status === "string" ? r.dna_lora_status : null,
+      dna_lora_error: typeof r.dna_lora_error === "string" ? r.dna_lora_error : null,
+      dna_lora_completed_at:
+        typeof r.dna_lora_completed_at === "string" ? r.dna_lora_completed_at : null,
+    });
+  }
+
+  return actors.map((a) => {
+    const c = map.get(a.id);
+    if (!c) return a;
+    return {
+      ...a,
+      dna_lora_url: c.dna_lora_url ?? a.dna_lora_url ?? null,
+      dna_lora_trigger: c.dna_lora_trigger ?? a.dna_lora_trigger ?? null,
+      dna_lora_fal_request_id: c.dna_lora_fal_request_id ?? a.dna_lora_fal_request_id ?? null,
+      dna_lora_status: c.dna_lora_status ?? a.dna_lora_status ?? null,
+      dna_lora_error: c.dna_lora_error ?? a.dna_lora_error ?? null,
+      dna_lora_completed_at: c.dna_lora_completed_at ?? a.dna_lora_completed_at ?? null,
+    };
+  });
+}
+
+async function attachPackNameNotesIfAvailable(
+  supabase: SupabaseClient,
+  actors: ActorRow[],
+): Promise<ActorRow[]> {
+  if (actors.length === 0) return actors;
+  const ids = actors.map((a) => a.id);
+
+  const { data, error } = await supabase
+    .from("actors")
+    .select("id,pack_name,notes")
+    .in("id", ids);
+
+  if (error) {
+    if (isMissingColumnError(error.message)) {
+      return actors;
+    }
+    return actors;
+  }
+
+  const packMap = new Map<string, string | null>();
+  const notesMap = new Map<string, string | null>();
+  for (const row of data ?? []) {
+    const r = row as { id: string; pack_name: unknown; notes: unknown };
+    packMap.set(r.id, typeof r.pack_name === "string" ? r.pack_name : null);
+    notesMap.set(r.id, typeof r.notes === "string" ? r.notes : null);
+  }
+
+  return actors.map((a) => ({
+    ...a,
+    pack_name: packMap.get(a.id) ?? a.pack_name ?? null,
+    notes: notesMap.get(a.id) ?? a.notes ?? null,
+  }));
+}
+
+async function attachFashionMoodKeywordsIfAvailable(
+  supabase: SupabaseClient,
+  actors: ActorRow[],
+): Promise<ActorRow[]> {
+  if (actors.length === 0) return actors;
+  const ids = actors.map((a) => a.id);
+
+  const { data, error } = await supabase
+    .from("actors")
+    .select("id,fashion_style,mood_keywords")
+    .in("id", ids);
+
+  if (error) {
+    if (isMissingColumnError(error.message)) {
+      return actors;
+    }
+    return actors;
+  }
+
+  const fashionMap = new Map<string, string | null>();
+  const moodMap = new Map<string, string | null>();
+  for (const row of data ?? []) {
+    const r = row as { id: string; fashion_style: unknown; mood_keywords: unknown };
+    fashionMap.set(r.id, typeof r.fashion_style === "string" ? r.fashion_style : null);
+    moodMap.set(r.id, typeof r.mood_keywords === "string" ? r.mood_keywords : null);
+  }
+
+  return actors.map((a) => ({
+    ...a,
+    fashion_style: fashionMap.get(a.id) ?? a.fashion_style ?? null,
+    mood_keywords: moodMap.get(a.id) ?? a.mood_keywords ?? null,
+  }));
+}
+
 async function attachHeadshotUrlsIfAvailable(
   supabase: SupabaseClient,
   actors: ActorRow[],
@@ -145,9 +304,55 @@ async function attachHeadshotUrlsIfAvailable(
   }));
 }
 
+async function attachElevenlabsVoiceReviewIfAvailable(
+  supabase: SupabaseClient,
+  actors: ActorRow[],
+): Promise<ActorRow[]> {
+  if (actors.length === 0) return actors;
+  const ids = actors.map((a) => a.id);
+
+  const { data, error } = await supabase
+    .from("actors")
+    .select("id,elevenlabs_voice_suggested_id,elevenlabs_voice_approved_at")
+    .in("id", ids);
+
+  if (error) {
+    if (isMissingColumnError(error.message)) {
+      return actors;
+    }
+    return actors;
+  }
+
+  const map = new Map<
+    string,
+    { elevenlabs_voice_suggested_id: string | null; elevenlabs_voice_approved_at: string | null }
+  >();
+  for (const row of data ?? []) {
+    const r = row as {
+      id: string;
+      elevenlabs_voice_suggested_id: unknown;
+      elevenlabs_voice_approved_at: unknown;
+    };
+    map.set(r.id, {
+      elevenlabs_voice_suggested_id:
+        typeof r.elevenlabs_voice_suggested_id === "string" ? r.elevenlabs_voice_suggested_id : null,
+      elevenlabs_voice_approved_at:
+        typeof r.elevenlabs_voice_approved_at === "string" ? r.elevenlabs_voice_approved_at : null,
+    });
+  }
+
+  return actors.map((a) => {
+    const p = map.get(a.id);
+    if (!p) return a;
+    return { ...a, ...p };
+  });
+}
+
 /** Explicit headshot columns + legacy `headshot_urls`; fall back if migration not applied. */
 const HSX =
   "headshot_2_url,headshot_3_url,headshot_4_url,headshot_5_url";
+const DEPTH =
+  "origin_city,backstory_summary,primary_goal,core_wound,fatal_flaw,signature_style,market_segment,must_keep_identity_traits,stage_name,vocal_range,personality_archetype,created_by_user_id,is_user_generated,visibility,generation_quality_mode";
 
 /** `age_range` text + numeric band; min/max only; text-only; or neither (older DBs). */
 const AGE_COLS_FULL = "age_range,age_range_min,age_range_max";
@@ -171,28 +376,53 @@ function selectListsWithAgeCols(
       ? `,${ageCols}`
       : ``;
   return [
-    `id,name${mid},tags,headshot_url,${HSX},headshot_urls,turnaround_url,race,traits,speech,levellabs_speech_id,height,weight,search_keywords,sex`,
-    `id,name${mid},tags,headshot_url,${HSX},headshot_urls,turnaround_url,race,traits,speech,levellabs_speech_id,height,weight,search_keywords`,
-    `id,name${mid},tags,headshot_url,${HSX},headshot_urls,turnaround_url,race,traits,speech,levellabs_speech_id`,
-    `id,name${mid},tags,headshot_url,${HSX},headshot_urls,turnaround_url`,
-    `id,name${mid},tags,headshot_urls,${HSX},turnaround_url,race,traits,speech,levellabs_speech_id,height,weight,search_keywords,sex`,
-    `id,name${mid},tags,headshot_urls,${HSX},turnaround_url,race,traits,speech,levellabs_speech_id,height,weight,search_keywords`,
-    `id,name${mid},tags,headshot_urls,${HSX},turnaround_url,race,traits,speech,levellabs_speech_id`,
-    `id,name${mid},tags,headshot_urls,${HSX},turnaround_url`,
-    `id,name${mid},tags,headshot_url,turnaround_url,race,traits,speech,levellabs_speech_id,height,weight,search_keywords,sex`,
-    `id,name${mid},tags,headshot_url,turnaround_url,race,traits,speech,levellabs_speech_id,height,weight,search_keywords`,
-    `id,name${mid},tags,headshot_url,turnaround_url,race,traits,speech,levellabs_speech_id`,
-    `id,name${mid},tags,headshot_url,turnaround_url`,
-    `id,name${mid},tags,headshot_urls,turnaround_url,race,traits,speech,levellabs_speech_id,height,weight,search_keywords,sex`,
-    `id,name${mid},tags,headshot_urls,turnaround_url,race,traits,speech,levellabs_speech_id,height,weight,search_keywords`,
-    `id,name${mid},tags,headshot_urls,turnaround_url,race,traits,speech,levellabs_speech_id`,
-    `id,name${mid},tags,headshot_urls,turnaround_url`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_url,${HSX},headshot_urls,turnaround_url,ethnicity,traits,speech,levellabs_speech_id,height,weight,search_keywords,sex`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_url,${HSX},headshot_urls,turnaround_url,ethnicity,traits,speech,levellabs_speech_id,height,weight,search_keywords`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_url,${HSX},headshot_urls,turnaround_url,ethnicity,traits,speech,levellabs_speech_id`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_url,${HSX},headshot_urls,turnaround_url`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_urls,${HSX},turnaround_url,ethnicity,traits,speech,levellabs_speech_id,height,weight,search_keywords,sex`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_urls,${HSX},turnaround_url,ethnicity,traits,speech,levellabs_speech_id,height,weight,search_keywords`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_urls,${HSX},turnaround_url,ethnicity,traits,speech,levellabs_speech_id`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_urls,${HSX},turnaround_url`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_url,turnaround_url,ethnicity,traits,speech,levellabs_speech_id,height,weight,search_keywords,sex`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_url,turnaround_url,ethnicity,traits,speech,levellabs_speech_id,height,weight,search_keywords`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_url,turnaround_url,ethnicity,traits,speech,levellabs_speech_id`,
+    `id,gallery_sort_order,name${mid},tags,headshot_url,turnaround_url`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_urls,turnaround_url,ethnicity,traits,speech,levellabs_speech_id,height,weight,search_keywords,sex`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_urls,turnaround_url,ethnicity,traits,speech,levellabs_speech_id,height,weight,search_keywords`,
+    `id,gallery_sort_order,name,${DEPTH}${mid},tags,headshot_urls,turnaround_url,ethnicity,traits,speech,levellabs_speech_id`,
+    `id,gallery_sort_order,name${mid},tags,headshot_urls,turnaround_url`,
   ];
 }
 
 /** DBs that have not applied `levellabs_speech_id` migration yet. */
 function withoutLevellabsColumn(selectList: string): string {
   return selectList.replace(/,levellabs_speech_id/g, "");
+}
+
+/** DBs that have not applied `gallery_sort_order` migration yet. */
+function withoutGallerySortOrderColumn(selectList: string): string {
+  return selectList.replace(/gallery_sort_order,/g, "");
+}
+
+function gallerySortKey(row: ActorRow): number {
+  const v = row.gallery_sort_order as unknown;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim()) {
+    const n = Number.parseInt(v, 10);
+    if (Number.isFinite(n)) return n;
+  }
+  return 100000;
+}
+
+/** Stable home-gallery order: `gallery_sort_order` asc, then name. */
+export function sortActorsForGallery(actors: ActorRow[]): ActorRow[] {
+  return [...actors].sort((a, b) => {
+    const ao = gallerySortKey(a);
+    const bo = gallerySortKey(b);
+    if (ao !== bo) return ao - bo;
+    return (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
+  });
 }
 
 const SELECT_LIST_BASE: readonly string[] = [
@@ -210,6 +440,10 @@ const SELECT_ATTEMPTS: readonly string[] = [
   "*",
   ...SELECT_LIST_BASE,
   ...SELECT_LIST_BASE.map(withoutLevellabsColumn),
+  ...SELECT_LIST_BASE.map(withoutGallerySortOrderColumn),
+  ...SELECT_LIST_BASE.map((s) =>
+    withoutLevellabsColumn(withoutGallerySortOrderColumn(s)),
+  ),
 ];
 
 /**
@@ -236,8 +470,14 @@ export async function fetchActorsForGallery(supabase: SupabaseClient): Promise<{
     if (!error) {
       let base = (data ?? []) as unknown as ActorRow[];
       base = await attachProfileCastingFieldsIfAvailable(supabase, base);
+      base = await attachPhysicalDescriptionIfAvailable(supabase, base);
+      base = await attachPackNameNotesIfAvailable(supabase, base);
+      base = await attachDnaLoraFieldsIfAvailable(supabase, base);
+      base = await attachFashionMoodKeywordsIfAvailable(supabase, base);
+      base = await attachElevenlabsVoiceReviewIfAvailable(supabase, base);
       const withTax = await attachTaxonomyIfAvailable(supabase, base);
-      const actors = await attachHeadshotUrlsIfAvailable(supabase, withTax);
+      const withUrls = await attachHeadshotUrlsIfAvailable(supabase, withTax);
+      const actors = sortActorsForGallery(withUrls);
       return { actors, error: null };
     }
 
@@ -272,6 +512,11 @@ export async function fetchActorById(
       }
       let base = [data as unknown as ActorRow];
       base = await attachProfileCastingFieldsIfAvailable(supabase, base);
+      base = await attachPhysicalDescriptionIfAvailable(supabase, base);
+      base = await attachPackNameNotesIfAvailable(supabase, base);
+      base = await attachDnaLoraFieldsIfAvailable(supabase, base);
+      base = await attachFashionMoodKeywordsIfAvailable(supabase, base);
+      base = await attachElevenlabsVoiceReviewIfAvailable(supabase, base);
       const withTax = await attachTaxonomyIfAvailable(supabase, base);
       const withUrls = await attachHeadshotUrlsIfAvailable(supabase, withTax);
       return { actor: withUrls[0] ?? null, error: null };
@@ -307,7 +552,7 @@ export async function fetchSimilarActors(
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean),
   );
-  const raceKey = current.race?.trim().toLowerCase() ?? "";
+  const heritageKey = (current.ethnicity?.trim() || "").toLowerCase() || "";
 
   function score(a: ActorRow): number {
     let s = 0;
@@ -317,8 +562,8 @@ export async function fetchSimilarActors(
     for (const tag of a.tags ?? []) {
       if (tagSet.has(tag.trim().toLowerCase())) s += 1;
     }
-    const r2 = a.race?.trim().toLowerCase() ?? "";
-    if (raceKey && r2 && raceKey === r2) s += 1;
+    const h2 = (a.ethnicity?.trim() || "").toLowerCase() || "";
+    if (heritageKey && h2 && heritageKey === h2) s += 1;
     return s;
   }
 

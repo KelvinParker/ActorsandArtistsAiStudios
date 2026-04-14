@@ -10,12 +10,16 @@ import { CharacterGallery } from "./components/CharacterGallery";
 export const dynamic = "force-dynamic";
 
 type HomeProps = {
-  searchParams?: Promise<{ view?: string }>;
+  searchParams?: Promise<{ view?: string; mode?: string; pack?: string }>;
 };
 
 export default async function Home({ searchParams }: HomeProps) {
   const params = searchParams ? await searchParams : undefined;
   const initialFavoritesOnly = params?.view?.toLowerCase() === "favs";
+  const userPreviewMode = params?.mode?.toLowerCase() === "user";
+  const packParam = params?.pack;
+  const initialPackFilter =
+    typeof packParam === "string" && packParam.trim() ? packParam.trim() : null;
   const { userId } = await auth();
   if (!userId) {
     return (
@@ -66,8 +70,7 @@ export default async function Home({ searchParams }: HomeProps) {
               preload="metadata"
             />
             <p className="px-3 py-2 text-[11px] text-white/50">
-              Add your teaser at{" "}
-              <code className="text-white/65">public/videos/studio-intro.mp4</code>.
+              Studio preview reel for demos and investor walk-throughs.
             </p>
           </section>
         </main>
@@ -79,6 +82,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const { actors, error } = await fetchActorsForGallery(supabase);
   const isAdmin = await getIsAdmin();
+  const showAdminControls = isAdmin && !userPreviewMode;
 
   if (error) {
     console.error("[actors] Supabase fetch failed:", error.message);
@@ -103,7 +107,7 @@ export default async function Home({ searchParams }: HomeProps) {
           Character Gallery
         </h2>
 
-        {isAdmin ? (
+        {showAdminControls ? (
           <nav
             className="mb-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-y border-white/10 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-metallic-orange/90 md:text-xs"
             aria-label="Admin shortcuts"
@@ -127,10 +131,28 @@ export default async function Home({ searchParams }: HomeProps) {
               |
             </span>
             <Link
+              href="/developers"
+              className="transition hover:text-metallic-orange hover:brightness-110"
+            >
+              Developers
+            </Link>
+            <span className="text-white/25" aria-hidden>
+              |
+            </span>
+            <Link
               href="/admin/add-actor"
               className="transition hover:text-metallic-orange hover:brightness-110"
             >
               Quick add actor
+            </Link>
+            <span className="text-white/25" aria-hidden>
+              |
+            </span>
+            <Link
+              href={initialFavoritesOnly ? "/?view=favs&mode=user" : "/?mode=user"}
+              className="transition text-white/70 hover:text-white"
+            >
+              Preview user view
             </Link>
           </nav>
         ) : (
@@ -141,14 +163,28 @@ export default async function Home({ searchParams }: HomeProps) {
             <Link href="/studio" className="transition hover:text-metallic-orange">
               Studio
             </Link>
+            {isAdmin ? (
+              <>
+                <span className="text-white/25" aria-hidden>
+                  |
+                </span>
+                <Link
+                  href={initialFavoritesOnly ? "/?view=favs" : "/"}
+                  className="transition text-metallic-orange/90 hover:text-metallic-orange"
+                >
+                  Back to admin view
+                </Link>
+              </>
+            ) : null}
           </nav>
         )}
 
         {!error && actors.length > 0 ? (
           <CharacterGallery
             actors={actors}
-            isAdmin={isAdmin}
+            isAdmin={showAdminControls}
             initialFavoritesOnly={initialFavoritesOnly}
+            initialPackFilter={initialPackFilter}
           />
         ) : null}
 

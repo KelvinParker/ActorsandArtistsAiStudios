@@ -111,7 +111,7 @@ function HeadshotCarousel({ urls, name }: { urls: string[]; name: string }) {
               ? `${name} — profile ${index + 1} of ${n}`
               : `${name} headshot`
           }
-          className="h-auto max-h-[min(78vh,760px)] w-full object-contain object-top"
+          className="h-auto max-h-[min(78vh,760px)] w-full object-contain object-center"
           loading={index === 0 ? "eager" : "lazy"}
           decoding="async"
         />
@@ -159,17 +159,22 @@ export function ActorCard({
   const searchKeywords = actor.search_keywords?.filter(Boolean) ?? [];
   const taxonomy = actor.taxonomy ?? [];
   const raceTerms = taxonomy.filter((t) => t.category === "race_ethnicity");
-  const raceOrEthnicity =
-    [actor.race?.trim(), actor.ethnicity?.trim()].filter(Boolean).join(" · ") ||
-    null;
+  const heritageLine = actor.ethnicity?.trim() || null;
 
   const hasProfile =
     showCastingStatsBar ||
     raceTerms.length > 0 ||
-    Boolean(raceOrEthnicity) ||
+    Boolean(heritageLine) ||
     traits.length > 0 ||
     tags.length > 0 ||
     searchKeywords.length > 0 ||
+    Boolean(actor.origin_city?.trim()) ||
+    Boolean(actor.market_segment?.trim()) ||
+    Boolean(actor.signature_style?.trim()) ||
+    Boolean(actor.backstory_summary?.trim()) ||
+    Boolean(actor.primary_goal?.trim()) ||
+    Boolean(actor.core_wound?.trim()) ||
+    Boolean(actor.fatal_flaw?.trim()) ||
     Boolean(actor.speech?.trim()) ||
     Boolean(actor.levellabs_speech_id?.trim());
 
@@ -244,10 +249,10 @@ export function ActorCard({
       ) : null}
 
       {showAdminControls ? (
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex min-w-0 flex-nowrap justify-center gap-1">
           <Link
             href={`/admin/cast?edit=${actor.id}`}
-            className="rounded-sm border border-metallic-orange/50 bg-metallic-orange/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-metallic-orange transition hover:bg-metallic-orange/25"
+            className="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-sm border border-metallic-orange/50 bg-metallic-orange/15 px-1 text-center text-[6px] font-semibold uppercase leading-none tracking-normal text-metallic-orange transition hover:bg-metallic-orange/25 sm:px-1.5 sm:text-[9px] sm:tracking-wide md:text-[10px]"
           >
             Edit
           </Link>
@@ -255,20 +260,35 @@ export function ActorCard({
             type="button"
             onClick={handleDownloadPack}
             disabled={!hasProfilePhotos || downloadPackPending}
-            className="rounded-sm border border-metallic-orange/45 bg-black/45 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-metallic-orange transition hover:bg-black/60 disabled:opacity-40"
+            className="inline-flex h-8 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-sm border border-metallic-orange/45 bg-black/45 px-1.5 text-center text-[6px] font-semibold uppercase leading-none tracking-normal text-metallic-orange transition hover:bg-black/60 disabled:opacity-40 sm:text-[9px] sm:tracking-wide md:text-[10px]"
             title={hasProfilePhotos ? undefined : "Headshot not available to package yet"}
           >
-            {downloadPackPending ? "Preparing…" : "Admin download pack"}
+            {downloadPackPending ? "Preparing…" : (
+              <>
+                <span className="md:hidden">Download</span>
+                <span className="hidden md:inline">Admin download pack</span>
+              </>
+            )}
           </button>
           <button
             type="button"
             disabled={deletePending}
             onClick={handleAdminDelete}
-            className="rounded-sm border border-red-500/45 bg-red-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-red-200/95 transition hover:bg-red-500/20 disabled:opacity-40"
+            className="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-sm border border-red-500/45 bg-red-500/10 px-1 text-center text-[6px] font-semibold uppercase tracking-[0.06em] text-red-200/95 transition hover:bg-red-500/20 disabled:opacity-40 sm:px-1.5 sm:text-[9px] sm:tracking-wide md:text-[10px]"
           >
             {deletePending ? "…" : "Delete"}
           </button>
         </div>
+      ) : null}
+      {showAdminControls &&
+      actor.elevenlabs_voice_suggested_id?.trim() &&
+      !actor.elevenlabs_voice_approved_at ? (
+        <p className="text-center text-[10px] text-amber-200/90">
+          ElevenLabs voice suggestion pending —{" "}
+          <Link href="/admin/voice-review" className="underline underline-offset-2 hover:text-amber-100">
+            Voice review
+          </Link>
+        </p>
       ) : null}
 
       {showHeroMedia ? (
@@ -296,7 +316,7 @@ export function ActorCard({
         ) : null}
         <div className="min-h-[4.5rem] space-y-2.5">
           {raceTerms.length > 0 ? (
-            <Field label="Race / ethnicity">
+            <Field label="Ethnicity">
               <ul className="flex flex-wrap gap-1.5">
                 {raceTerms.map((t) => (
                   <li
@@ -308,8 +328,8 @@ export function ActorCard({
                 ))}
               </ul>
             </Field>
-          ) : !showCastingStatsBar && raceOrEthnicity ? (
-            <Field label="Race / ethnicity">{raceOrEthnicity}</Field>
+          ) : !showCastingStatsBar && heritageLine ? (
+            <Field label="Ethnicity">{heritageLine}</Field>
           ) : null}
           {traits.length > 0 ? (
             <Field label="Character traits">
@@ -356,6 +376,29 @@ export function ActorCard({
               </ul>
             </Field>
           ) : null}
+          {actor.origin_city?.trim() ? (
+            <Field label="Origin city">{actor.origin_city.trim()}</Field>
+          ) : null}
+          {actor.market_segment?.trim() ? (
+            <Field label="Market segment">{actor.market_segment.trim()}</Field>
+          ) : null}
+          {actor.signature_style?.trim() ? (
+            <Field label="Signature style">{actor.signature_style.trim()}</Field>
+          ) : null}
+          {actor.primary_goal?.trim() ? (
+            <Field label="Primary goal">{actor.primary_goal.trim()}</Field>
+          ) : null}
+          {actor.core_wound?.trim() ? (
+            <Field label="Core wound">{actor.core_wound.trim()}</Field>
+          ) : null}
+          {actor.fatal_flaw?.trim() ? (
+            <Field label="Fatal flaw">{actor.fatal_flaw.trim()}</Field>
+          ) : null}
+          {actor.backstory_summary?.trim() ? (
+            <Field label="Backstory summary">
+              <p className="whitespace-pre-wrap">{actor.backstory_summary.trim()}</p>
+            </Field>
+          ) : null}
           {actor.speech?.trim() || actor.levellabs_speech_id?.trim() ? (
             <Field label="Speech & voice">
               {actor.speech?.trim() ? (
@@ -370,13 +413,13 @@ export function ActorCard({
                 </p>
               ) : null}
               <p className="mt-1 text-[11px] text-white/45">
-                Voice previews and sharing are subject to ElevenLabs terms and licensing.
+                Use only ElevenLabs previews that are free for your plan and permitted under their terms.
               </p>
             </Field>
           ) : null}
           {!hasProfile ? (
             <p className="text-[11px] text-white/40">
-              Add race, traits, tags, and speech — or sign in and use casting
+              Add ethnicity, traits, tags, and speech — or sign in and use casting
               tags (taxonomy migration).
             </p>
           ) : null}

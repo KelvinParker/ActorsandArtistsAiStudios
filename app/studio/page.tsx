@@ -58,8 +58,8 @@ export default async function StudioPage() {
             Studio
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/65">
-            Click-through dashboard for both casting users and admins: shortlist
-            workflows, pack delivery, and curation operations.
+            Demo control center for gallery discovery, shortlist building, and
+            delivery-ready character packs.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.16em]">
             <AuthStatusButton />
@@ -107,6 +107,20 @@ export default async function StudioPage() {
               href="/"
               cta="Download packs"
             />
+            <ActionCard
+              title="Create Your Character"
+              body="Generate your own actor profile and download-ready character pack from one prompt."
+              href="/create"
+              cta="Open creator"
+            />
+            {isAdmin ? (
+              <ActionCard
+                title="Developers & API"
+                body="Universal Actor Schema (Field IDs 1.0–7.0), external column aliases, and sample JSON for ComfyUI-style pipelines."
+                href="/developers"
+                cta="Open schema docs"
+              />
+            ) : null}
           </div>
         </section>
 
@@ -118,7 +132,7 @@ export default async function StudioPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <ActionCard
                 title="Casting Editor"
-                body="Edit age ranges, race/sex/height/weight, tags, traits, speech, and upload assets."
+                body="Edit age ranges, ethnicity/sex/height/weight, tags, traits, speech, and upload assets."
                 href="/admin/cast"
                 cta="Open casting"
               />
@@ -129,6 +143,18 @@ export default async function StudioPage() {
                 cta="Quick add"
               />
               <ActionCard
+                title="AI → Review → Import"
+                body="Copy prompts for Gemini or ChatGPT, zip the folder they output, pick turnaround and headshots, then push to Supabase."
+                href="/admin/actor-pipeline"
+                cta="Open actor pipeline"
+              />
+              <ActionCard
+                title="ElevenLabs voice review"
+                body="Optional voice ids: queue from imports when you used 29.txt; approve later or add ids in casting when ready."
+                href="/admin/voice-review"
+                cta="Open voice review"
+              />
+              <ActionCard
                 title="Admin Delivery"
                 body="Use in-card admin controls (Edit/Delete/Download pack) for rapid handoff."
                 href="/"
@@ -137,8 +163,12 @@ export default async function StudioPage() {
             </div>
           ) : (
             <p className="rounded-sm border border-white/15 bg-black/35 px-4 py-3 text-sm text-white/60">
-              Admin-only tools are hidden for your account. Sign in as an admin to
-              preview casting operations from this screen.
+              Admin-only tools are hidden for your account. If you need elevated
+              access, open{" "}
+              <Link href="/admin-access" className="text-metallic-orange underline-offset-2 hover:underline">
+                admin access help
+              </Link>
+              .
             </p>
           )}
         </section>

@@ -1,4 +1,4 @@
-import { playingAgeDisplay, raceDisplay, statOrNA } from "@/lib/actor-display";
+import { ethnicityDisplay, playingAgeDisplay, statOrNA } from "@/lib/actor-display";
 import type { ActorRow } from "@/lib/types/actor";
 
 type Props = {
@@ -8,7 +8,7 @@ type Props = {
 };
 
 /**
- * Race / ethnicity | Sex | Age range | Height | Weight — horizontal bar.
+ * Ethnicity (primary) | Sex | Age range | Height | Weight — horizontal bar.
  * Use `variant="inline"` at the top of Character details next to traits/speech.
  */
 export function ActorProfileStatsBar({
@@ -16,11 +16,13 @@ export function ActorProfileStatsBar({
   variant = "section",
 }: Props) {
   const items = [
-    { label: "Race / ethnicity", value: raceDisplay(actor) },
+    { label: "Ethnicity", value: ethnicityDisplay(actor) },
     { label: "Sex", value: statOrNA(actor.sex) },
     { label: "Age range", value: playingAgeDisplay(actor) },
     { label: "Height", value: statOrNA(actor.height) },
     { label: "Weight", value: statOrNA(actor.weight) },
+    { label: "Vocal range", value: statOrNA(actor.vocal_range) },
+    { label: "Motivation", value: statOrNA(actor.personality_archetype) },
   ] as const;
 
   const shell =

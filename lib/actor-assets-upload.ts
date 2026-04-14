@@ -18,6 +18,11 @@ function mimeToExt(mime: string): string {
   return "jpg";
 }
 
+function extFromContentType(type: string): string {
+  const normalized = type.split(";")[0].trim().toLowerCase();
+  return mimeToExt(normalized);
+}
+
 function isFile(v: unknown): v is File {
   return (
     typeof v === "object" &&
@@ -29,9 +34,15 @@ function isFile(v: unknown): v is File {
   );
 }
 
-function publicUrlForPath(supabase: SupabaseClient, objectPath: string): string {
+function publicUrlForPath(
+  supabase: SupabaseClient,
+  objectPath: string,
+  cacheBuster?: string,
+): string {
   const { data } = supabase.storage.from(ACTOR_ASSETS_BUCKET).getPublicUrl(objectPath);
-  return data.publicUrl;
+  if (!cacheBuster) return data.publicUrl;
+  const sep = data.publicUrl.includes("?") ? "&" : "?";
+  return `${data.publicUrl}${sep}v=${encodeURIComponent(cacheBuster)}`;
 }
 
 /**
@@ -72,6 +83,115 @@ async function uploadImageFile(
   return { error: error?.message ?? null };
 }
 
+async function uploadImageBuffer(
+  supabase: SupabaseClient,
+  objectPath: string,
+  buffer: ArrayBuffer,
+  contentType: string,
+): Promise<{ error: string | null }> {
+  const type = contentType.split(";")[0].trim().toLowerCase();
+  if (buffer.byteLength > MAX_IMAGE_BYTES) {
+    return { error: `File too large (max ${MAX_IMAGE_BYTES / 1024 / 1024}MB).` };
+  }
+  if (!ALLOWED_IMAGE.has(type)) {
+    return { error: "Image must be JPEG, PNG, WebP, or GIF." };
+  }
+  const { error } = await supabase.storage.from(ACTOR_ASSETS_BUCKET).upload(objectPath, buffer, {
+    contentType: type,
+    upsert: true,
+  });
+  return { error: error?.message ?? null };
+}
+
+export type ActorImportAssetBuffer = {
+  buffer: ArrayBuffer;
+  contentType: string;
+};
+
+/**
+ * After bulk import upsert, uploads local image buffers to `actor-assets` and
+ * updates headshot / turnaround columns (file wins over the same slot from `32`/`33` URLs).
+ */
+export async function syncActorAssetsFromImportBuffers(
+  supabase: SupabaseClient,
+  actorId: string,
+  actorName: string,
+  payloadSnapshot: Record<string, unknown>,
+  files: {
+    turnaround: ActorImportAssetBuffer | null;
+    headshots: ActorImportAssetBuffer[];
+  },
+): Promise<{ error: string | null }> {
+  if (!files.turnaround && files.headshots.length === 0) {
+    return { error: null };
+  }
+
+  const { error: markerErr } = await uploadActorFolderMarker(supabase, actorId, actorName);
+  if (markerErr) {
+    return { error: `Storage folder marker failed: ${markerErr}` };
+  }
+
+  const prefix = actorAssetFolderPrefix(actorId, actorName);
+  const cacheBuster = Date.now().toString();
+  const urlSlots: (string | null)[] = [null, null, null, null, null];
+
+  const arr = payloadSnapshot.headshot_urls;
+  if (Array.isArray(arr)) {
+    for (let i = 0; i < 5; i++) {
+      const u = arr[i];
+      if (typeof u === "string" && u.trim()) {
+        urlSlots[i] = u.trim();
+      }
+    }
+  }
+  const legacy = payloadSnapshot.headshot_url;
+  if (!urlSlots[0] && typeof legacy === "string" && legacy.trim()) {
+    urlSlots[0] = legacy.trim();
+  }
+
+  for (let i = 0; i < files.headshots.length && i < 5; i++) {
+    const slot = files.headshots[i];
+    const ext = mimeToExt(slot.contentType);
+    const objectPath = `${prefix}/headshot-${String(i + 1).padStart(2, "0")}.${ext}`;
+    const { error: upErr } = await uploadImageBuffer(supabase, objectPath, slot.buffer, slot.contentType);
+    if (upErr) {
+      return { error: `Headshot ${i + 1} upload failed: ${upErr}` };
+    }
+    urlSlots[i] = publicUrlForPath(supabase, objectPath, cacheBuster);
+  }
+
+  let finalTurnaround: string | null =
+    typeof payloadSnapshot.turnaround_url === "string" && payloadSnapshot.turnaround_url.trim()
+      ? String(payloadSnapshot.turnaround_url).trim()
+      : null;
+
+  if (files.turnaround) {
+    const ext = mimeToExt(files.turnaround.contentType);
+    const objectPath = `${prefix}/turnaround.${ext}`;
+    const { error: upErr } = await uploadImageBuffer(
+      supabase,
+      objectPath,
+      files.turnaround.buffer,
+      files.turnaround.contentType,
+    );
+    if (upErr) {
+      return { error: `Turnaround upload failed: ${upErr}` };
+    }
+    finalTurnaround = publicUrlForPath(supabase, objectPath, cacheBuster);
+  }
+
+  const payload = headshotPayloadFromSlots(urlSlots);
+  const { error: dbErr } = await supabase
+    .from("actors")
+    .update({
+      ...payload,
+      turnaround_url: finalTurnaround,
+    })
+    .eq("id", actorId);
+
+  return { error: dbErr?.message ?? null };
+}
+
 /**
  * After insert/update, merge optional file uploads into `headshot_*` / turnaround URLs.
  * Reads `headshot_0`…`headshot_4` URLs and `headshot_file_0`…`headshot_file_4` files,
@@ -89,6 +209,7 @@ export async function syncActorAssetsFromFormData(
   }
 
   const prefix = actorAssetFolderPrefix(actorId, actorName);
+  const cacheBuster = Date.now().toString();
   const urlSlots: (string | null)[] = [];
   for (let i = 0; i < 5; i++) {
     const u = String(formData.get(`headshot_${i}`) ?? "").trim();
@@ -106,7 +227,7 @@ export async function syncActorAssetsFromFormData(
     if (upErr) {
       return { error: `Headshot ${i + 1} upload failed: ${upErr}` };
     }
-    merged[i] = publicUrlForPath(supabase, objectPath);
+    merged[i] = publicUrlForPath(supabase, objectPath, cacheBuster);
   }
 
   const turnaroundUrl = String(formData.get("turnaround") ?? "").trim() || null;
@@ -119,7 +240,7 @@ export async function syncActorAssetsFromFormData(
     if (upErr) {
       return { error: `Turnaround upload failed: ${upErr}` };
     }
-    finalTurnaround = publicUrlForPath(supabase, objectPath);
+    finalTurnaround = publicUrlForPath(supabase, objectPath, cacheBuster);
   }
 
   const payload = headshotPayloadFromSlots(merged);
@@ -129,6 +250,105 @@ export async function syncActorAssetsFromFormData(
       ...payload,
       turnaround_url: finalTurnaround,
     })
+    .eq("id", actorId);
+
+  return { error: dbErr?.message ?? null };
+}
+
+async function uploadImageFromUrl(
+  supabase: SupabaseClient,
+  objectPath: string,
+  sourceUrl: string,
+): Promise<{ error: string | null }> {
+  if (sourceUrl.startsWith("data:image/")) {
+    const comma = sourceUrl.indexOf(",");
+    if (comma <= 0) {
+      return { error: "Invalid data URL format." };
+    }
+    const meta = sourceUrl.slice(0, comma);
+    const b64 = sourceUrl.slice(comma + 1);
+    const mimeMatch = /^data:(image\/[a-z0-9.+-]+);base64$/i.exec(meta);
+    const contentType = (mimeMatch?.[1] ?? "image/png").toLowerCase();
+    if (!ALLOWED_IMAGE.has(contentType)) {
+      return { error: `Unsupported data URL content type: ${contentType}` };
+    }
+    const bytes = Buffer.from(b64, "base64");
+    if (bytes.byteLength > MAX_IMAGE_BYTES) {
+      return { error: `Remote image too large (max ${MAX_IMAGE_BYTES / 1024 / 1024}MB).` };
+    }
+    const { error } = await supabase.storage.from(ACTOR_ASSETS_BUCKET).upload(objectPath, bytes, {
+      contentType,
+      upsert: true,
+    });
+    return { error: error?.message ?? null };
+  }
+
+  const res = await fetch(sourceUrl, { cache: "no-store" });
+  if (!res.ok) {
+    return { error: `Download failed (${res.status})` };
+  }
+  const contentType = res.headers.get("content-type") || "image/jpeg";
+  if (!ALLOWED_IMAGE.has(contentType.split(";")[0].trim().toLowerCase())) {
+    return { error: `Unsupported content type: ${contentType}` };
+  }
+  const bytes = await res.arrayBuffer();
+  if (bytes.byteLength > MAX_IMAGE_BYTES) {
+    return { error: `Remote image too large (max ${MAX_IMAGE_BYTES / 1024 / 1024}MB).` };
+  }
+  const { error } = await supabase.storage.from(ACTOR_ASSETS_BUCKET).upload(objectPath, bytes, {
+    contentType,
+    upsert: true,
+  });
+  return { error: error?.message ?? null };
+}
+
+/**
+ * Mirrors remote-generated images into canonical Supabase storage and updates actor URLs.
+ */
+export async function syncActorAssetsFromRemoteUrls(
+  supabase: SupabaseClient,
+  actorId: string,
+  actorName: string,
+  headshotUrls: string[],
+  turnaroundUrl: string | null,
+): Promise<{ error: string | null }> {
+  const { error: markerErr } = await uploadActorFolderMarker(supabase, actorId, actorName);
+  if (markerErr) {
+    return { error: `Storage folder marker failed: ${markerErr}` };
+  }
+
+  const prefix = actorAssetFolderPrefix(actorId, actorName);
+  const cacheBuster = Date.now().toString();
+  const merged: (string | null)[] = [null, null, null, null, null];
+  for (let i = 0; i < Math.min(headshotUrls.length, 5); i++) {
+    const url = headshotUrls[i];
+    if (!url) continue;
+    const probe = await fetch(url, { method: "HEAD", cache: "no-store" });
+    const ext = extFromContentType(probe.headers.get("content-type") || "image/jpeg");
+    const objectPath = `${prefix}/headshot-${String(i + 1).padStart(2, "0")}.${ext}`;
+    const { error } = await uploadImageFromUrl(supabase, objectPath, url);
+    if (error) {
+      return { error: `Headshot ${i + 1} mirror failed: ${error}` };
+    }
+    merged[i] = publicUrlForPath(supabase, objectPath, cacheBuster);
+  }
+
+  let finalTurnaround: string | null = null;
+  if (turnaroundUrl) {
+    const probe = await fetch(turnaroundUrl, { method: "HEAD", cache: "no-store" });
+    const ext = extFromContentType(probe.headers.get("content-type") || "image/jpeg");
+    const objectPath = `${prefix}/turnaround.${ext}`;
+    const { error } = await uploadImageFromUrl(supabase, objectPath, turnaroundUrl);
+    if (error) {
+      return { error: `Turnaround mirror failed: ${error}` };
+    }
+    finalTurnaround = publicUrlForPath(supabase, objectPath, cacheBuster);
+  }
+
+  const payload = headshotPayloadFromSlots(merged);
+  const { error: dbErr } = await supabase
+    .from("actors")
+    .update({ ...payload, turnaround_url: finalTurnaround })
     .eq("id", actorId);
 
   return { error: dbErr?.message ?? null };

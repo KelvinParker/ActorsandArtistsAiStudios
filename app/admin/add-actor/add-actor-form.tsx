@@ -48,6 +48,69 @@ export function AddActorForm() {
 
   return (
     <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-6">
+      <fieldset className="space-y-3 rounded-sm border border-metallic-orange/35 bg-metallic-orange/5 p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-metallic-orange">
+          Automation Pipeline (A-D)
+        </legend>
+        <label className="flex items-center gap-2 text-sm text-white/80">
+          <input
+            type="checkbox"
+            id="auto_generate"
+            name="auto_generate"
+            defaultChecked
+            className="h-4 w-4 accent-metallic-orange"
+          />
+          Enable 1-prompt auto character generation
+        </label>
+        <div>
+          <label htmlFor="seed_prompt" className={labelClass}>
+            Seed prompt (required for auto mode)
+          </label>
+          <textarea
+            id="seed_prompt"
+            name="seed_prompt"
+            rows={3}
+            className={inputClass}
+            placeholder="One sentence concept, e.g. Ruthless but loyal Memphis kingpin strategist in her 30s."
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="headshot_provider" className={labelClass}>
+              Headshot provider
+            </label>
+            <select
+              id="headshot_provider"
+              name="headshot_provider"
+              className={selectClass}
+              defaultValue="flow"
+            >
+              <option value="flow">Google Flow + Nano Banana</option>
+              <option value="flux">Flux (fallback)</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="turnaround_provider" className={labelClass}>
+              Turnaround provider
+            </label>
+            <select
+              id="turnaround_provider"
+              name="turnaround_provider"
+              className={selectClass}
+              defaultValue="nano-banana"
+            >
+              <option value="nano-banana">Nano Banana (Google Flow)</option>
+              <option value="flux">Flux (fallback)</option>
+            </select>
+          </div>
+        </div>
+        <p className="text-[11px] leading-relaxed text-white/55">
+          A) Gemini expands identity. B) Flux generates master face. C) Consistency set is
+          generated and turnaround can route to Nano Banana (Flow). D) Assets are mirrored to
+          Supabase and saved to actor row.
+        </p>
+      </fieldset>
+
       <div>
         <label htmlFor="name" className={labelClass}>
           Name <span className="text-metallic-orange">*</span>
@@ -61,6 +124,18 @@ export function AddActorForm() {
           placeholder="e.g. Marcus King"
         />
       </div>
+      <div>
+        <label htmlFor="stage_name" className={labelClass}>
+          Stage name
+        </label>
+        <input
+          id="stage_name"
+          name="stage_name"
+          autoComplete="off"
+          className={inputClass}
+          placeholder='e.g. Jada "J-Soul" Vance'
+        />
+      </div>
 
       <AgeRangeSelector
         idPrefix="add-actor"
@@ -69,9 +144,9 @@ export function AddActorForm() {
       />
 
       <CastingPicklistSelect
-        id="add-actor-race"
-        name="race"
-        label="Race / ethnicity"
+        id="add-actor-ethnicity"
+        name="ethnicity"
+        label="Ethnicity"
         baseOptions={RACE_ETHNICITY_OPTIONS}
         defaultValue={null}
         selectClass={selectClass}
@@ -111,10 +186,178 @@ export function AddActorForm() {
           />
         </div>
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="origin_city" className={labelClass}>
+            Origin city
+          </label>
+          <input
+            id="origin_city"
+            name="origin_city"
+            autoComplete="off"
+            className={inputClass}
+            placeholder="e.g. Memphis, TN"
+          />
+        </div>
+        <div>
+          <label htmlFor="market_segment" className={labelClass}>
+            Market segment
+          </label>
+          <input
+            id="market_segment"
+            name="market_segment"
+            autoComplete="off"
+            className={inputClass}
+            placeholder="e.g. Lead / Supporting / Antagonist"
+          />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="signature_style" className={labelClass}>
+          Signature style
+        </label>
+        <input
+          id="signature_style"
+          name="signature_style"
+          autoComplete="off"
+          className={inputClass}
+          placeholder="Wardrobe/aesthetic shorthand"
+        />
+      </div>
+      <div>
+        <label htmlFor="fashion_style" className={labelClass}>
+          Fashion style (locked uniform) <span className="font-normal text-white/45">(Field 3.0)</span>
+        </label>
+        <input
+          id="fashion_style"
+          name="fashion_style"
+          autoComplete="off"
+          className={inputClass}
+          placeholder="Standard clothing set for continuity"
+        />
+      </div>
+      <div>
+        <label htmlFor="mood_keywords" className={labelClass}>
+          Mood / visual tone <span className="font-normal text-white/45">(Field 4.0)</span>
+        </label>
+        <input
+          id="mood_keywords"
+          name="mood_keywords"
+          autoComplete="off"
+          className={inputClass}
+          placeholder="e.g. Neon-purple, low-key amber, high-contrast noir"
+        />
+      </div>
+      <div>
+        <label htmlFor="backstory_summary" className={labelClass}>
+          Backstory summary
+        </label>
+        <textarea
+          id="backstory_summary"
+          name="backstory_summary"
+          rows={2}
+          className={inputClass}
+          placeholder="Short narrative synopsis"
+        />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="primary_goal" className={labelClass}>
+            Primary goal
+          </label>
+          <input
+            id="primary_goal"
+            name="primary_goal"
+            autoComplete="off"
+            className={inputClass}
+            placeholder="Core objective"
+          />
+        </div>
+        <div>
+          <label htmlFor="core_wound" className={labelClass}>
+            Core wound
+          </label>
+          <input
+            id="core_wound"
+            name="core_wound"
+            autoComplete="off"
+            className={inputClass}
+            placeholder="Internal pain point"
+          />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="fatal_flaw" className={labelClass}>
+          Fatal flaw
+        </label>
+        <input
+          id="fatal_flaw"
+          name="fatal_flaw"
+          autoComplete="off"
+          className={inputClass}
+          placeholder="Trait that creates conflict risk"
+        />
+      </div>
+      <fieldset className="space-y-3 rounded-sm border border-metallic-orange/25 bg-black/25 p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-metallic-orange/90">
+          Face DNA & identity lock (Field 2.0 / 2.1)
+        </legend>
+        <div>
+          <label htmlFor="physical_description" className={labelClass}>
+            Physical description (Face DNA)
+          </label>
+          <textarea
+            id="physical_description"
+            name="physical_description"
+            rows={3}
+            className={inputClass}
+            placeholder="Distinct features: eyes, skin tone, facial hair, bone structure…"
+          />
+        </div>
+        <div>
+          <label htmlFor="must_keep_identity_traits" className={labelClass}>
+            Must-keep identity traits
+          </label>
+          <textarea
+            id="must_keep_identity_traits"
+            name="must_keep_identity_traits"
+            rows={3}
+            className={inputClass}
+            placeholder="Non-negotiables for AI consistency across shots"
+          />
+        </div>
+      </fieldset>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="vocal_range" className={labelClass}>
+            Vocal range
+          </label>
+          <input
+            id="vocal_range"
+            name="vocal_range"
+            autoComplete="off"
+            className={inputClass}
+            placeholder="e.g. Alto / Mezzo-soprano"
+          />
+        </div>
+        <div>
+          <label htmlFor="personality_archetype" className={labelClass}>
+            Motivation
+          </label>
+          <input
+            id="personality_archetype"
+            name="personality_archetype"
+            autoComplete="off"
+            className={inputClass}
+            placeholder="e.g. Soulful underdog chasing legacy"
+          />
+        </div>
+      </div>
 
       <div>
         <label htmlFor="tags" className={labelClass}>
-          Tags
+          Tags <span className="font-normal text-white/45">(Field 6.0)</span>
         </label>
         <input
           id="tags"
@@ -124,8 +367,38 @@ export function AddActorForm() {
           placeholder="Comma-separated: Memphis, Gritty, Lead"
         />
         <p className="mt-1 text-[11px] text-white/40">
-          Separate with commas or semicolons.
+          Separate with commas or semicolons. Stored as a text array in Supabase.
         </p>
+      </div>
+
+      <div>
+        <label htmlFor="pack_name" className={labelClass}>
+          Pack name <span className="font-normal text-white/45">(Field 6.1)</span>
+        </label>
+        <input
+          id="pack_name"
+          name="pack_name"
+          autoComplete="off"
+          className={inputClass}
+          placeholder="e.g. Riverside Drive-Thru — Night Shift, The Retail Tech Crew"
+        />
+        <p className="mt-1 text-[11px] text-white/40">
+          Any label you want. Use the same spelling for every character in a crew so they stay
+          grouped in the gallery pack filter.
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="notes" className={labelClass}>
+          Production notes <span className="font-normal text-white/45">(Field 7.0)</span>
+        </label>
+        <textarea
+          id="notes"
+          name="notes"
+          rows={2}
+          className={inputClass}
+          placeholder="Ops / production-only notes"
+        />
       </div>
 
       <fieldset className="space-y-3 rounded-sm border border-white/10 bg-black/20 p-4">

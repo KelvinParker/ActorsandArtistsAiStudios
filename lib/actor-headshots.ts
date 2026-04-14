@@ -44,6 +44,9 @@ function columnExtras(actor: ActorRow): string[] {
  * Uses `headshot_urls` first (cover + in-array extras), then appends
  * `headshot_2_url`…`headshot_5_url` from the Table Editor so those still show.
  * Gallery tile still uses only {@link getGalleryCoverUrl}.
+ *
+ * **Production pack (minimum 4 assets):** `headshot_urls[0]` = master **9:16** hero;
+ * `headshot_urls[1]` and `[2]` = **16:9** stills; plus `turnaround_url` = **16:9 horizontal** sheet.
  */
 export function buildProfileImageUrls(actor: ActorRow): string[] {
   const arr = normalizedHeadshotArray(actor);
@@ -67,10 +70,10 @@ export function buildProfileImageUrls(actor: ActorRow): string[] {
 export function headshotPayloadFromSlots(slots: (string | null)[]): {
   headshot_url: string | null;
   headshot_urls: string[];
-  headshot_2_url: null;
-  headshot_3_url: null;
-  headshot_4_url: null;
-  headshot_5_url: null;
+  headshot_2_url: string | null;
+  headshot_3_url: string | null;
+  headshot_4_url: string | null;
+  headshot_5_url: string | null;
 } {
   const compact = slots
     .map((s) => (typeof s === "string" ? s.trim() : ""))
@@ -80,9 +83,10 @@ export function headshotPayloadFromSlots(slots: (string | null)[]): {
   return {
     headshot_url: compact[0] ?? null,
     headshot_urls: compact,
-    headshot_2_url: null,
-    headshot_3_url: null,
-    headshot_4_url: null,
-    headshot_5_url: null,
+    // Mirror ordered slots into legacy columns for clearer Table Editor visibility.
+    headshot_2_url: compact[1] ?? null,
+    headshot_3_url: compact[2] ?? null,
+    headshot_4_url: compact[3] ?? null,
+    headshot_5_url: compact[4] ?? null,
   };
 }

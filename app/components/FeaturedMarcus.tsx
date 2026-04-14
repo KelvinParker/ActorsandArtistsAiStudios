@@ -25,7 +25,7 @@ function buildSummary(a: ActorRow | null): string {
         ? a.age.trim()
         : null;
   const parts = [
-    a.race?.trim() || a.ethnicity?.trim(),
+    a.ethnicity?.trim(),
     ageBit,
     a.tags?.length ? a.tags.join(" · ") : null,
   ].filter(Boolean);
@@ -35,7 +35,7 @@ function buildSummary(a: ActorRow | null): string {
 function tagPills(a: ActorRow | null): string[] {
   if (!a) return FALLBACK_TAGS;
   const band = formatPlayingAgeRange(a);
-  const raceLine = a.race?.trim() || a.ethnicity?.trim();
+  const raceLine = a.ethnicity?.trim();
   const fromDb = [
     ...(a.tags ?? []),
     ...(band ? [band] : a.age?.trim() ? [a.age.trim()] : []),

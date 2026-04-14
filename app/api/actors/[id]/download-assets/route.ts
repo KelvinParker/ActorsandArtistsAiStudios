@@ -126,7 +126,7 @@ export async function POST(
       actor_id: actor.id,
       name: actor.name,
       playing_age: formatPlayingAgeRange(actor),
-      race: actor.race ?? null,
+      ethnicity: actor.ethnicity ?? null,
       sex: actor.sex ?? null,
       height: actor.height ?? null,
       weight: actor.weight ?? null,
@@ -138,7 +138,7 @@ export async function POST(
       headshot_count: headshotUrls.length,
       has_turnaround: Boolean(turnaround),
       usage_note:
-        "Voice previews and sharing are subject to ElevenLabs terms and licensing.",
+        "Use only ElevenLabs voice previews/listening that are free for your plan and allowed under ElevenLabs terms; paid or commercial use is separate.",
     };
     zip.file(
       withPrefix("character.json"),
@@ -148,7 +148,7 @@ export async function POST(
       `Character: ${actor.name}`,
       `Actor ID: ${actor.id}`,
       `Playing age: ${formatPlayingAgeRange(actor) ?? "N/A"}`,
-      `Race / ethnicity: ${actor.race?.trim() || "N/A"}`,
+      `Ethnicity: ${actor.ethnicity?.trim() || "N/A"}`,
       `Sex: ${actor.sex?.trim() || "N/A"}`,
       `Height: ${actor.height?.trim() || "N/A"}`,
       `Weight: ${actor.weight?.trim() || "N/A"}`,
@@ -158,7 +158,7 @@ export async function POST(
       `Speech notes: ${actor.speech?.trim() || "N/A"}`,
       `ElevenLabs voice ID: ${actor.levellabs_speech_id?.trim() || "N/A"}`,
       "",
-      "Voice previews and sharing are subject to ElevenLabs terms and licensing.",
+      "Use only ElevenLabs voice previews/listening that are free for your plan and allowed under ElevenLabs terms; paid or commercial use is separate.",
     ];
     zip.file(withPrefix("character.txt"), `${textLines.join("\n")}\n`);
   }

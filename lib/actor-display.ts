@@ -6,15 +6,13 @@ export function statOrNA(value: string | null | undefined): string {
   return t.length > 0 ? t : "N/A";
 }
 
-/** Race column, falling back to ethnicity for the same casting slot. */
-export function raceDisplay(actor: {
-  race?: string | null;
-  ethnicity?: string | null;
-}): string {
-  const r = statOrNA(actor.race);
-  if (r !== "N/A") return r;
+/** Heritage line for UI (import + casting `ethnicity` column). */
+export function ethnicityDisplay(actor: { ethnicity?: string | null }): string {
   return statOrNA(actor.ethnicity);
 }
+
+/** @deprecated Use {@link ethnicityDisplay}. */
+export const raceDisplay = ethnicityDisplay;
 
 /** `age_range` text (e.g. 45-55), else numeric columns, else legacy `age`. */
 export function playingAgeDisplay(actor: {

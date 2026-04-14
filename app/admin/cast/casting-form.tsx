@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { CastingHeightSelect, CastingPicklistSelect } from "@/app/components/CastingPicklistSelect";
 import { buildProfileImageUrls } from "@/lib/actor-headshots";
 import {
@@ -12,6 +12,10 @@ import {
 import { AgeRangeSelector } from "@/app/components/AgeRangeSelector";
 import { trackEvent } from "@/lib/analytics";
 import type { ActorRow } from "@/lib/types/actor";
+import Link from "next/link";
+import { buildElevenlabsVoiceMatchingBrief } from "@/lib/elevenlabs-voice-brief";
+import { elevenlabsPreviewUsageNote, elevenlabsVoiceLabUrl } from "@/lib/elevenlabs-links";
+import { ActorLibraryDropPanel } from "./actor-library-drop-panel";
 import { upsertActorCastAction } from "./actions";
 
 const inputClass =
@@ -53,9 +57,21 @@ export function CastingForm({ initialActor }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [voiceBriefCopied, setVoiceBriefCopied] = useState(false);
   const editing = Boolean(initialActor);
   const slots = headshotSlots(initialActor);
   const heightOptions = useMemo(() => castingHeightFormOptions(), []);
+
+  const copyVoiceBrief = useCallback(async () => {
+    if (!initialActor) return;
+    try {
+      await navigator.clipboard.writeText(buildElevenlabsVoiceMatchingBrief(initialActor));
+      setVoiceBriefCopied(true);
+      setTimeout(() => setVoiceBriefCopied(false), 2500);
+    } catch {
+      setVoiceBriefCopied(false);
+    }
+  }, [initialActor]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -81,6 +97,7 @@ export function CastingForm({ initialActor }: Props) {
   }
 
   return (
+    <>
     <form
       key={initialActor?.id ?? "create"}
       onSubmit={handleSubmit}
@@ -105,6 +122,80 @@ export function CastingForm({ initialActor }: Props) {
           placeholder="Character / performer catalog name"
         />
       </div>
+      <fieldset className="space-y-4 rounded-sm border border-white/10 bg-black/20 p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-white/70">
+          Substance
+        </legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="cast-stage-name" className={labelClass}>
+              Stage name
+            </label>
+            <input
+              id="cast-stage-name"
+              name="stage_name"
+              defaultValue={initialActor?.stage_name ?? ""}
+              autoComplete="off"
+              className={inputClass}
+              placeholder='e.g. Jada "J-Soul" Vance'
+            />
+          </div>
+          <div>
+            <label htmlFor="cast-vocal-range" className={labelClass}>
+              Vocal range
+            </label>
+            <input
+              id="cast-vocal-range"
+              name="vocal_range"
+              defaultValue={initialActor?.vocal_range ?? ""}
+              autoComplete="off"
+              className={inputClass}
+              placeholder="e.g. Alto / Mezzo-soprano"
+            />
+          </div>
+        </div>
+        <div>
+          <label htmlFor="cast-personality-archetype" className={labelClass}>
+            Personality archetype
+          </label>
+          <input
+            id="cast-personality-archetype"
+            name="personality_archetype"
+            defaultValue={initialActor?.personality_archetype ?? ""}
+            autoComplete="off"
+            className={inputClass}
+            placeholder="e.g. Reluctant star / street-smart visionary"
+          />
+        </div>
+        <div>
+          <label htmlFor="cast-primary-goal" className={labelClass}>
+            Key motivation
+          </label>
+          <textarea
+            id="cast-primary-goal"
+            name="primary_goal"
+            rows={3}
+            defaultValue={initialActor?.primary_goal ?? ""}
+            autoComplete="off"
+            className={textareaClass}
+            placeholder="What they want most and why."
+          />
+        </div>
+        <div>
+          <label htmlFor="cast-must-keep-traits" className={labelClass}>
+            Must-keep identity traits
+          </label>
+          <textarea
+            id="cast-must-keep-traits"
+            name="must_keep_identity_traits"
+            rows={3}
+            defaultValue={initialActor?.must_keep_identity_traits ?? ""}
+            autoComplete="off"
+            className={textareaClass}
+            placeholder="Face geometry, hair rules, non-negotiable identity markers."
+          />
+        </div>
+      </fieldset>
 
       <AgeRangeSelector
         key={initialActor?.id ?? "create"}
@@ -127,11 +218,11 @@ export function CastingForm({ initialActor }: Props) {
       />
 
       <CastingPicklistSelect
-        id="cast-race"
-        name="race"
-        label="Race / ethnicity"
+        id="cast-ethnicity"
+        name="ethnicity"
+        label="Ethnicity"
         baseOptions={RACE_ETHNICITY_OPTIONS}
-        defaultValue={initialActor?.race}
+        defaultValue={initialActor?.ethnicity ?? null}
         selectClass={selectClass}
         labelClass={labelClass}
       />
@@ -163,11 +254,28 @@ export function CastingForm({ initialActor }: Props) {
 
       <fieldset className="space-y-4 rounded-sm border border-white/10 bg-black/20 p-4">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-white/70">
-          Tags, traits &amp; voice
+          Tags, pack, traits &amp; voice
         </legend>
         <p className="text-[11px] leading-relaxed text-white/45">
           These fields appear on the character profile. {commaHint}
         </p>
+        <div>
+          <label htmlFor="cast-pack-name" className={labelClass}>
+            Pack name <span className="font-normal text-white/45">(Field 6.1)</span>
+          </label>
+          <input
+            id="cast-pack-name"
+            name="pack_name"
+            defaultValue={initialActor?.pack_name ?? ""}
+            autoComplete="off"
+            className={inputClass}
+            placeholder='e.g. The Retail Tech Crew — any label you choose'
+          />
+          <p className="mt-1 text-[11px] text-white/40">
+            Type any crew or batch name. Characters with the exact same text (after trim) group
+            together in the gallery pack filter and profile “Crew gallery” link.
+          </p>
+        </div>
         <div>
           <label htmlFor="cast-tags" className={labelClass}>
             Tags
@@ -227,10 +335,29 @@ export function CastingForm({ initialActor }: Props) {
             placeholder="Dialect, cadence, tone — sample line or how they sound. For future ElevenLabs (or similar) voice matching."
           />
         </div>
+        {editing ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void copyVoiceBrief()}
+              className="rounded-sm border border-metallic-orange/40 bg-metallic-orange/10 px-3 py-1.5 text-xs font-medium text-metallic-orange hover:bg-metallic-orange/20"
+            >
+              {voiceBriefCopied ? "Copied" : "Copy voice-matching brief for ElevenLabs"}
+            </button>
+            <span className="text-[11px] text-white/40">
+              Paste into ElevenLabs only for previews/listening that are <strong className="text-white/55">free</strong>{" "}
+              for your plan under their terms. Voice id is optional at first; when you have one, paste it
+              below or into <code className="text-white/50">29.txt</code> before import (recommended). You
+              can backfill any time.
+            </span>
+          </div>
+        ) : null}
         <div>
           <label htmlFor="cast-levellabs-speech-id" className={labelClass}>
             ElevenLabs voice ID{" "}
-            <span className="font-normal normal-case text-white/40">(optional)</span>
+            <span className="font-normal normal-case text-white/40">
+              (optional — recommended when matched)
+            </span>
           </label>
           <input
             id="cast-levellabs-speech-id"
@@ -239,13 +366,48 @@ export function CastingForm({ initialActor }: Props) {
             defaultValue={initialActor?.levellabs_speech_id ?? ""}
             autoComplete="off"
             className={inputClass}
-            placeholder="Paste an ElevenLabs voice id when you have one"
+            placeholder="Leave blank until you have a voice; add or change later anytime"
           />
           <p className="mt-1 text-[11px] text-white/40">
-            Optional hook for a future ElevenLabs (or other) API connection — same field stores the id.
-            Usage and sharing are subject to ElevenLabs licensing and terms.
+            Production id for downloads and future TTS. Fine to ship without it and backfill later.{" "}
+            {elevenlabsPreviewUsageNote}
           </p>
         </div>
+        {initialActor?.elevenlabs_voice_suggested_id?.trim() ? (
+          <div className="rounded-sm border border-metallic-orange/25 bg-metallic-orange/10 p-3">
+            <p className={labelClass}>Suggested ElevenLabs voice (from import / AI)</p>
+            <code className="mt-1 block break-all text-sm text-white/85">
+              {initialActor.elevenlabs_voice_suggested_id.trim()}
+            </code>
+            <div className="mt-2 flex flex-wrap gap-3 text-xs">
+              <a
+                href={elevenlabsVoiceLabUrl(initialActor.elevenlabs_voice_suggested_id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-metallic-orange underline-offset-2 hover:underline"
+              >
+                Open suggested id in ElevenLabs
+              </a>
+              <Link
+                href="/admin/voice-review"
+                className="text-metallic-orange underline-offset-2 hover:underline"
+              >
+                Voice review queue
+              </Link>
+            </div>
+            {initialActor.elevenlabs_voice_approved_at ? (
+              <p className="mt-2 text-[11px] text-white/45">
+                Last voice approval:{" "}
+                {new Date(initialActor.elevenlabs_voice_approved_at).toLocaleString()}
+              </p>
+            ) : (
+              <p className="mt-2 text-[11px] text-white/45">
+                Not marked approved yet — optional step: use Voice review to promote this suggestion into
+                production, or paste a different id above when you are ready.
+              </p>
+            )}
+          </div>
+        ) : null}
       </fieldset>
 
       <fieldset className="space-y-3 rounded-sm border border-white/10 bg-black/20 p-4">
@@ -256,7 +418,10 @@ export function CastingForm({ initialActor }: Props) {
           Uploads are stored under{" "}
           <code className="text-white/55">{`actor-assets/<actor-id>/<name-slug>/`}</code>{" "}
           and public URLs are saved for the gallery and download pack. Upload overrides URL
-          for the same slot.
+          for the same slot. Target pack: <span className="text-white/55">four</span> images — slot{" "}
+          <span className="text-white/55">1</span> <span className="text-white/40">9:16</span>, slots{" "}
+          <span className="text-white/55">2–3</span> <span className="text-white/40">16:9</span> stills,
+          turnaround <span className="text-white/40">16:9 horizontal</span>.
         </p>
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="rounded-sm border border-white/10 bg-black/25 p-3">
@@ -265,12 +430,17 @@ export function CastingForm({ initialActor }: Props) {
               {i === 0 ? (
                 <span className="font-normal normal-case text-white/40">
                   {" "}
-                  (gallery cover)
+                  (9:16 hero · gallery cover)
+                </span>
+              ) : i === 1 || i === 2 ? (
+                <span className="font-normal normal-case text-white/40">
+                  {" "}
+                  (16:9 still)
                 </span>
               ) : (
                 <span className="font-normal normal-case text-white/40">
                   {" "}
-                  (profile only)
+                  (optional extra)
                 </span>
               )}
             </label>
@@ -299,6 +469,7 @@ export function CastingForm({ initialActor }: Props) {
         <div className="rounded-sm border border-white/10 bg-black/25 p-3">
           <label htmlFor="turnaround" className={labelClass}>
             Turnaround — URL
+            <span className="font-normal normal-case text-white/40"> (16:9 horizontal sheet)</span>
           </label>
           <input
             id="turnaround"
@@ -352,5 +523,11 @@ export function CastingForm({ initialActor }: Props) {
         ) : null}
       </div>
     </form>
+    {editing && initialActor ? (
+      <div className="mt-8">
+        <ActorLibraryDropPanel actorId={initialActor.id} actorName={initialActor.name} />
+      </div>
+    ) : null}
+    </>
   );
 }

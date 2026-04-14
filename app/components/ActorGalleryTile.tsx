@@ -113,14 +113,11 @@ export function ActorGalleryTile({
         </div>
         {showAdminControls ? (
           <div
-            className="absolute left-2 top-2 z-20 flex items-center gap-1 rounded-full border border-white/20 bg-black/70 px-2 py-1"
+            className="absolute bottom-2 left-2 z-20 rounded-full border border-white/20 bg-black/65 p-1"
             title={loraDotTitle}
             aria-label={loraDotTitle}
           >
-            <span className={`h-2.5 w-2.5 rounded-full ${loraDotClass}`} />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/80">
-              LoRA
-            </span>
+            <span className={`block h-2 w-2 rounded-full ${loraDotClass}`} />
           </div>
         ) : null}
         <Link

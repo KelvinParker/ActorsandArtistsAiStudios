@@ -64,6 +64,15 @@ export interface ActorRow {
   dna_lora_url?: string | null;
   /** Trigger token paired with {@link dna_lora_url} for prompts / inference. */
   dna_lora_trigger?: string | null;
+  /** Explicit LoRA training slots (Table Editor-friendly). */
+  dna_1_url?: string | null;
+  dna_2_url?: string | null;
+  dna_3_url?: string | null;
+  dna_4_url?: string | null;
+  dna_5_url?: string | null;
+  dna_6_url?: string | null;
+  /** Optional extra training images (beyond gallery headshots/turnaround), e.g. dna_1...dna_6. */
+  dna_lora_training_urls?: string[] | null;
   dna_lora_fal_request_id?: string | null;
   /** `queued` | `processing` | `completed` | `failed` */
   dna_lora_status?: string | null;

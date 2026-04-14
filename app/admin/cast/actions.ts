@@ -54,6 +54,34 @@ function collectHeadshotSlots(fd: FormData): (string | null)[] {
   return out;
 }
 
+function collectDnaTrainingSlots(fd: FormData): string[] {
+  const out: string[] = [];
+  for (let i = 1; i <= 6; i++) {
+    const u = sf(fd.get(`dna_${i}`));
+    if (u) out.push(u);
+  }
+  return out;
+}
+
+function dnaTrainingSlotMap(fd: FormData): {
+  dna_1_url: string | null;
+  dna_2_url: string | null;
+  dna_3_url: string | null;
+  dna_4_url: string | null;
+  dna_5_url: string | null;
+  dna_6_url: string | null;
+} {
+  const v = (n: number) => sfNull(fd.get(`dna_${n}`));
+  return {
+    dna_1_url: v(1),
+    dna_2_url: v(2),
+    dna_3_url: v(3),
+    dna_4_url: v(4),
+    dna_5_url: v(5),
+    dna_6_url: v(6),
+  };
+}
+
 export async function upsertActorCastAction(
   formData: FormData,
 ): Promise<CastActionResult> {
@@ -105,6 +133,8 @@ export async function upsertActorCastAction(
   const slots = collectHeadshotSlots(formData);
   const headshots = headshotPayloadFromSlots(slots);
   const turnaround_url = sfNull(formData.get("turnaround"));
+  const dna_lora_training_urls = collectDnaTrainingSlots(formData);
+  const dnaSlotCols = dnaTrainingSlotMap(formData);
 
   const row = {
     name,
@@ -128,6 +158,8 @@ export async function upsertActorCastAction(
     search_keywords,
     ...headshots,
     turnaround_url,
+    dna_lora_training_urls,
+    ...dnaSlotCols,
   };
 
   if (actorId) {

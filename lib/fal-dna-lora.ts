@@ -53,8 +53,20 @@ function dedupeUrls(urls: string[]): string[] {
  */
 export function collectDnaLoraTrainingUrls(actor: ActorRow): string[] {
   const headshots = buildProfileImageUrls(actor);
+  const slotCols = [
+    actor.dna_1_url,
+    actor.dna_2_url,
+    actor.dna_3_url,
+    actor.dna_4_url,
+    actor.dna_5_url,
+    actor.dna_6_url,
+  ].filter((u): u is string => typeof u === "string" && u.trim().length > 0);
+  const extras = Array.isArray(actor.dna_lora_training_urls)
+    ? actor.dna_lora_training_urls
+    : [];
   const turn = actor.turnaround_url?.trim() || null;
-  const merged = turn && !headshots.includes(turn) ? [...headshots, turn] : headshots;
+  const withExtras = [...headshots, ...slotCols, ...extras];
+  const merged = turn && !withExtras.includes(turn) ? [...withExtras, turn] : withExtras;
   return dedupeUrls(merged).slice(0, MAX_TRAINING_IMAGES);
 }
 

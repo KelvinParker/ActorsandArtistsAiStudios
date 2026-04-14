@@ -156,7 +156,7 @@ async function attachDnaLoraFieldsIfAvailable(
   const { data, error } = await supabase
     .from("actors")
     .select(
-      "id,dna_lora_url,dna_lora_trigger,dna_lora_fal_request_id,dna_lora_status,dna_lora_error,dna_lora_completed_at",
+      "id,dna_lora_url,dna_lora_trigger,dna_1_url,dna_2_url,dna_3_url,dna_4_url,dna_5_url,dna_6_url,dna_lora_training_urls,dna_lora_fal_request_id,dna_lora_status,dna_lora_error,dna_lora_completed_at",
     )
     .in("id", ids);
 
@@ -170,6 +170,13 @@ async function attachDnaLoraFieldsIfAvailable(
   type LoraCols = {
     dna_lora_url: string | null;
     dna_lora_trigger: string | null;
+    dna_1_url: string | null;
+    dna_2_url: string | null;
+    dna_3_url: string | null;
+    dna_4_url: string | null;
+    dna_5_url: string | null;
+    dna_6_url: string | null;
+    dna_lora_training_urls: string[] | null;
     dna_lora_fal_request_id: string | null;
     dna_lora_status: string | null;
     dna_lora_error: string | null;
@@ -181,6 +188,17 @@ async function attachDnaLoraFieldsIfAvailable(
     map.set(r.id, {
       dna_lora_url: typeof r.dna_lora_url === "string" ? r.dna_lora_url : null,
       dna_lora_trigger: typeof r.dna_lora_trigger === "string" ? r.dna_lora_trigger : null,
+      dna_1_url: typeof r.dna_1_url === "string" ? r.dna_1_url : null,
+      dna_2_url: typeof r.dna_2_url === "string" ? r.dna_2_url : null,
+      dna_3_url: typeof r.dna_3_url === "string" ? r.dna_3_url : null,
+      dna_4_url: typeof r.dna_4_url === "string" ? r.dna_4_url : null,
+      dna_5_url: typeof r.dna_5_url === "string" ? r.dna_5_url : null,
+      dna_6_url: typeof r.dna_6_url === "string" ? r.dna_6_url : null,
+      dna_lora_training_urls: Array.isArray(r.dna_lora_training_urls)
+        ? (r.dna_lora_training_urls as unknown[]).filter(
+            (x): x is string => typeof x === "string" && x.trim().length > 0,
+          )
+        : null,
       dna_lora_fal_request_id:
         typeof r.dna_lora_fal_request_id === "string" ? r.dna_lora_fal_request_id : null,
       dna_lora_status: typeof r.dna_lora_status === "string" ? r.dna_lora_status : null,
@@ -197,6 +215,13 @@ async function attachDnaLoraFieldsIfAvailable(
       ...a,
       dna_lora_url: c.dna_lora_url ?? a.dna_lora_url ?? null,
       dna_lora_trigger: c.dna_lora_trigger ?? a.dna_lora_trigger ?? null,
+      dna_1_url: c.dna_1_url ?? a.dna_1_url ?? null,
+      dna_2_url: c.dna_2_url ?? a.dna_2_url ?? null,
+      dna_3_url: c.dna_3_url ?? a.dna_3_url ?? null,
+      dna_4_url: c.dna_4_url ?? a.dna_4_url ?? null,
+      dna_5_url: c.dna_5_url ?? a.dna_5_url ?? null,
+      dna_6_url: c.dna_6_url ?? a.dna_6_url ?? null,
+      dna_lora_training_urls: c.dna_lora_training_urls ?? a.dna_lora_training_urls ?? null,
       dna_lora_fal_request_id: c.dna_lora_fal_request_id ?? a.dna_lora_fal_request_id ?? null,
       dna_lora_status: c.dna_lora_status ?? a.dna_lora_status ?? null,
       dna_lora_error: c.dna_lora_error ?? a.dna_lora_error ?? null,

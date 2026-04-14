@@ -244,11 +244,40 @@ export async function syncActorAssetsFromFormData(
   }
 
   const payload = headshotPayloadFromSlots(merged);
+  const dnaUrls: (string | null)[] = [];
+  for (let i = 1; i <= 6; i++) {
+    const u = String(formData.get(`dna_${i}`) ?? "").trim();
+    dnaUrls.push(u || null);
+  }
+  for (let i = 1; i <= 6; i++) {
+    const raw = formData.get(`dna_file_${i}`);
+    if (!isFile(raw) || raw.size <= 0) continue;
+    const ext = mimeToExt(raw.type);
+    const objectPath = `${prefix}/dna_${i}.${ext}`;
+    const { error: upErr } = await uploadImageFile(supabase, objectPath, raw);
+    if (upErr) {
+      return { error: `DNA ${i} upload failed: ${upErr}` };
+    }
+    dnaUrls[i - 1] = publicUrlForPath(supabase, objectPath, cacheBuster);
+  }
+  const dna_lora_training_urls = dnaUrls
+    .map((u) => (typeof u === "string" ? u.trim() : ""))
+    .filter(Boolean);
+  const dnaSlots = {
+    dna_1_url: dna_lora_training_urls[0] ?? null,
+    dna_2_url: dna_lora_training_urls[1] ?? null,
+    dna_3_url: dna_lora_training_urls[2] ?? null,
+    dna_4_url: dna_lora_training_urls[3] ?? null,
+    dna_5_url: dna_lora_training_urls[4] ?? null,
+    dna_6_url: dna_lora_training_urls[5] ?? null,
+  };
   const { error: dbErr } = await supabase
     .from("actors")
     .update({
       ...payload,
       turnaround_url: finalTurnaround,
+      dna_lora_training_urls,
+      ...dnaSlots,
     })
     .eq("id", actorId);
 

@@ -53,6 +53,26 @@ function headshotSlots(
   ];
 }
 
+function dnaTrainingSlots(actor: ActorRow | null): [string, string, string, string, string, string] {
+  const urls = [
+    actor?.dna_1_url ?? "",
+    actor?.dna_2_url ?? "",
+    actor?.dna_3_url ?? "",
+    actor?.dna_4_url ?? "",
+    actor?.dna_5_url ?? "",
+    actor?.dna_6_url ?? "",
+  ];
+  const fallback = Array.isArray(actor?.dna_lora_training_urls) ? actor!.dna_lora_training_urls : [];
+  return [
+    urls[0] || fallback[0] || "",
+    urls[1] || fallback[1] || "",
+    urls[2] || fallback[2] || "",
+    urls[3] || fallback[3] || "",
+    urls[4] || fallback[4] || "",
+    urls[5] || fallback[5] || "",
+  ];
+}
+
 export function CastingForm({ initialActor }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +80,7 @@ export function CastingForm({ initialActor }: Props) {
   const [voiceBriefCopied, setVoiceBriefCopied] = useState(false);
   const editing = Boolean(initialActor);
   const slots = headshotSlots(initialActor);
+  const dnaSlots = dnaTrainingSlots(initialActor);
   const heightOptions = useMemo(() => castingHeightFormOptions(), []);
 
   const copyVoiceBrief = useCallback(async () => {
@@ -491,6 +512,46 @@ export function CastingForm({ initialActor }: Props) {
             accept="image/jpeg,image/png,image/webp,image/gif"
             className={fileInputClass}
           />
+        </div>
+        <div className="rounded-sm border border-metallic-orange/30 bg-metallic-orange/10 p-3">
+          <p className={labelClass}>
+            DNA LoRA training images
+            <span className="font-normal normal-case text-white/45"> (optional extras: dna_1…dna_6)</span>
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-white/45">
+            These do not change gallery layout. They are extra training stills used by Fal LoRA jobs and
+            stored as <code className="text-white/55">dna_1</code> through{" "}
+            <code className="text-white/55">dna_6</code> under actor storage.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {[1, 2, 3, 4, 5, 6].map((n, idx) => (
+              <div key={n} className="rounded-sm border border-white/10 bg-black/25 p-3">
+                <label htmlFor={`dna_${n}`} className={labelClass}>
+                  dna_{n} — URL
+                </label>
+                <input
+                  id={`dna_${n}`}
+                  name={`dna_${n}`}
+                  type="url"
+                  inputMode="url"
+                  defaultValue={dnaSlots[idx]}
+                  autoComplete="off"
+                  className={inputClass}
+                  placeholder="https://…"
+                />
+                <label htmlFor={`dna_file_${n}`} className={`${labelClass} mt-2`}>
+                  dna_{n} — upload
+                </label>
+                <input
+                  id={`dna_file_${n}`}
+                  name={`dna_file_${n}`}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className={fileInputClass}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </fieldset>
 

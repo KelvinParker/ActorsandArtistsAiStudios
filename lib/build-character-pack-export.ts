@@ -13,6 +13,13 @@ export type CharacterPackExportV1 = {
     turnaround_url: string | null;
     dna_lora_url: string | null;
     dna_lora_trigger: string | null;
+    dna_1_url: string | null;
+    dna_2_url: string | null;
+    dna_3_url: string | null;
+    dna_4_url: string | null;
+    dna_5_url: string | null;
+    dna_6_url: string | null;
+    dna_lora_training_urls: string[] | null;
     dna_lora_status: string | null;
     dna_lora_completed_at: string | null;
     levellabs_speech_id: string | null;
@@ -41,6 +48,13 @@ export function buildCharacterPackExportV1(actor: ActorRow): CharacterPackExport
       turnaround_url: actor.turnaround_url?.trim() || null,
       dna_lora_url: actor.dna_lora_url?.trim() || null,
       dna_lora_trigger: actor.dna_lora_trigger?.trim() || null,
+      dna_1_url: actor.dna_1_url?.trim() || null,
+      dna_2_url: actor.dna_2_url?.trim() || null,
+      dna_3_url: actor.dna_3_url?.trim() || null,
+      dna_4_url: actor.dna_4_url?.trim() || null,
+      dna_5_url: actor.dna_5_url?.trim() || null,
+      dna_6_url: actor.dna_6_url?.trim() || null,
+      dna_lora_training_urls: actor.dna_lora_training_urls ?? null,
       dna_lora_status: actor.dna_lora_status?.trim() || null,
       dna_lora_completed_at: actor.dna_lora_completed_at?.trim() || null,
       levellabs_speech_id: actor.levellabs_speech_id?.trim() || null,

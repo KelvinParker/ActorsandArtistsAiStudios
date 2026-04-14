@@ -39,6 +39,11 @@ export function ActorGalleryTile({
   const [downloadPackPending, startDownloadPackTransition] = useTransition();
   const name = actor.name;
   const primary = getGalleryCoverUrl(actor);
+  const loraReady = (actor.dna_lora_status ?? "").trim().toLowerCase() === "completed";
+  const loraDotClass = loraReady ? "bg-emerald-400" : "bg-red-500";
+  const loraDotTitle = loraReady
+    ? "DNA LoRA: trained (completed)"
+    : "DNA LoRA: not trained yet";
 
   function handleAdminDelete() {
     if (
@@ -106,6 +111,18 @@ export function ActorGalleryTile({
             </button>
           ) : null}
         </div>
+        {showAdminControls ? (
+          <div
+            className="absolute left-2 top-2 z-20 flex items-center gap-1 rounded-full border border-white/20 bg-black/70 px-2 py-1"
+            title={loraDotTitle}
+            aria-label={loraDotTitle}
+          >
+            <span className={`h-2.5 w-2.5 rounded-full ${loraDotClass}`} />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/80">
+              LoRA
+            </span>
+          </div>
+        ) : null}
         <Link
           href={`/actors/${actor.id}`}
           className="group block rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-metallic-orange/60"
